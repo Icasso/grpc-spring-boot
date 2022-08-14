@@ -3,6 +3,9 @@ package com.isaactsui;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @GrpcService
 public class BookAuthorServerService extends BookAuthorServiceGrpc.BookAuthorServiceImplBase {
     @Override
@@ -41,6 +44,28 @@ public class BookAuthorServerService extends BookAuthorServiceGrpc.BookAuthorSer
             @Override
             public void onCompleted() {
                 responseObserver.onNext(expensiveBook);
+                responseObserver.onCompleted();
+            }
+        };
+    }
+
+    @Override
+    public StreamObserver<Book> getBookByAuthorGender(StreamObserver<Book> responseObserver) {
+        return new StreamObserver<Book>() {
+            List<Book> bookList = new ArrayList<>();
+            @Override
+            public void onNext(Book book) {
+                TempDB.getBooksFromTempDb().stream().filter(booksFromDb -> book.getAuthorId() == booksFromDb.getAuthorId()).forEach(bookList::add);
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                responseObserver.onError(throwable);
+            }
+
+            @Override
+            public void onCompleted() {
+                bookList.forEach(responseObserver::onNext);
                 responseObserver.onCompleted();
             }
         };
