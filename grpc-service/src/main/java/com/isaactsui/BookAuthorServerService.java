@@ -18,4 +18,31 @@ public class BookAuthorServerService extends BookAuthorServiceGrpc.BookAuthorSer
 
         responseObserver.onCompleted();
     }
+
+    @Override
+    public StreamObserver<Book> getExpensiveBook(StreamObserver<Book> responseObserver) {
+        return new StreamObserver<Book>() {
+            Book expensiveBook = null;
+            float priceTrack = 0;
+
+            @Override
+            public void onNext(Book book) {
+                if (book.getPrice() > priceTrack) {
+                    priceTrack = book.getPrice();
+                    expensiveBook = book;
+                }
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                responseObserver.onError(throwable);
+            }
+
+            @Override
+            public void onCompleted() {
+                responseObserver.onNext(expensiveBook);
+                responseObserver.onCompleted();
+            }
+        };
+    }
 }
